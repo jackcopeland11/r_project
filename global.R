@@ -1,4 +1,7 @@
+library(tidyr)
+library(data.table)
 
-emissions <- read.csv(file = "./co2_emissions.csv")
+
+emissions <- fread("./co2_emissions.csv", header=T)
 
  

@@ -2,8 +2,11 @@ library(dplyr)
 library(ggplot2)
 library(data.table)
 library(tidyr)
+emissions <- read.csv(file = "./co2_emissions.csv")
+
 
 emissions <- fread("./co2_emissions.csv", header=T)
+
 
 View(emissions)
 x = emissions %>%
