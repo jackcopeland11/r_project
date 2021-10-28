@@ -1,23 +1,36 @@
 library(shinydashboard)
 
 emissions <- fread("./co2_emissions.csv", header=T)
+population <- fread("./population.csv", header=T)
+gdp <- fread("./gdp.csv", header=T)
+
+
 
 dashboardPage(
   dashboardHeader(title = 'Carbon Emissions'),
   dashboardSidebar(),
   dashboardBody(
-    tabsetPanel(tabPanel("Histogram" ,
+    tabsetPanel(tabPanel("Context (All Countries)", ## Beginning of "All Countries" tab
+        tabsetPanel(
+          tabPanel("Bar Chart" ,
+                   fluidRow(align = "center" , 
+                            titlePanel("World Trends"),
+                            plotOutput("emission_bar_chart", width= "90%")),
+                   fluidRow(align = "center" , style = "padding-top:100px;",
+                            column(6,plotOutput("population_bar_chart")),
+                            column(6,  plotOutput("gdp_bar_chart"))
+          )),
+
+          tabPanel("Histogram" ,
                 fluidRow(align = "center" , sliderInput("year",
                                 "Year",
                                 min = 1960,
                                 max = 2018,
                                 value = 1960),
+                    checkboxInput("test" , "Test" , FALSE),
                     plotOutput("emission_by_year"))
-                
                 ),
-                tabPanel("Bar Chart" ,
-                         fluidRow(align = "center" , 
-                          plotOutput("emission_bar_chart"))  ),
+                
                 tabPanel("Scatter by Country",
                          fluidRow(align = "center",
                            selectizeInput('country',
@@ -26,4 +39,7 @@ dashboardPage(
                            plotOutput("scatter_plot")
                          ))
                 )
-  ))  
+  ),## Ending all countries tab
+  tabPanel('Top 10 Countries')
+  ) 
+  ))
