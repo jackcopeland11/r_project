@@ -2,8 +2,9 @@ library(dplyr)
 library(ggplot2)
 library(data.table)
 library(tidyr)
-emissions <- read.csv(file = "./co2_emissions.csv")
 emissions <- fread("./co2_emissions.csv", header=T)
+renewable <- fread("./renewable_energy.csv" , header = T) # <- % of total energy that comes from renewable sources
+renew_kwh <- fread("./total_renewable_kwh.csv" , header = T) # <- Total energy (KwH) that comes from renewable sources
 
 ####Prepare and plot Emissions data ---------------------------------------------------------
 
@@ -87,37 +88,94 @@ e = emissions
 View(e)
 
 e$quintile <- ntile(e$"2018" , 5)
+View(e)
+e = select(e, -1:-4)
 
-quints = e %>%
+quints = e %>% 
   pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission') %>%
   arrange("2018")
+View(quints)
 
-quints_grouped = select(quints, -1:-4)
 
-
-emis_line = ggplot(data = quints_grouped, aes(x = year, y = emission, fill = quintile))
+emis_line = ggplot(data = na.omit(quints), aes(x = year, y = emission, fill = as.factor(quintile)))
 emis_line + geom_bar(stat = 'identity', position = 'dodge') +
   scale_y_discrete(name = 'CO2 Emissions (kt)')+
-  scale_x_discrete(name = "Year", limits = c('1960','1965', '1970',
-                                             '1975', '1980','1985' ,'1990',
-                                             '1995', '2000','2005','2010','2018'))
-
-# Create percentage of emission by grouped quartile 
-v = quints_grouped %>%
-  group_by(quintile) %>%
-  mutate(percent_of_emission = emission/sum(emission))
-                                             
+  scale_x_discrete(name = "Year",limits = c('1960','1965', '1970',
+                                                      '1975', '1980','1985' ,'1990',
+                                                      '1995', '2000','2005','2010','2018')) + coord_flip()
 
 
+e = emissions
+e$quintile <- ntile(e$"2018" , 5)
+View(e)
 
-## Build Population Scatter Plots ---------------------------------------------------------------------------------
-population <- fread("./population.csv" , header = T)
-scatter_pop = population %>%
-  pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'population') %>%
-  pivot_longer(cols = country_name, values_to = 'country') %>%
-  filter(country == "United States")
+quints = e %>% 
+  pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission') %>%
+  filter(quintile == 5)%>% filter(year == "2012")
 
-scatter_pop[,5] = sapply(scatter_pop[,5],as.numeric)
-scatter = ggplot(data = scatter_pop , aes(x = year, y = population))
-scatter + geom_point() + ggtitle("Population Over Time")+ theme(plot.title = element_text(hjust = 0.5))
 
+
+emis_line = ggplot(data = na.omit(quints), aes(x = country_name, y = emission))
+emis_line + geom_bar(stat = 'identity', position = 'dodge') +
+  scale_y_discrete(name = 'CO2 Emissions (kt)')+
+  scale_x_discrete(name = "Country") + coord_flip()
+
+
+
+
+
+
+# Create percentage of emission by grouped quartile ------------
+
+e = emissions
+e$quintile <- ntile(e$"2018" , 5)
+
+e = e %>% 
+  pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission') 
+
+total_emissions = sum(na.omit(emissions$"2018"))
+
+v = e %>%
+  group_by(quintile, year) %>% 
+  summarise(percent_of_emission = (sum(emission)/total_emissions)*100) %>% 
+  filter(year == "2018") 
+                                            
+
+percent_by_quintile= ggplot(data = na.omit(v), aes(x = as.factor(quintile), y = percent_of_emission))
+percent_by_quintile + geom_bar(stat = 'identity', position = 'dodge')
+  
+
+
+
+
+
+###Renewable energy -------
+
+ren = renew_kwh %>%
+  pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'kwh_renewable') %>%
+  pivot_longer(cols = country_name, values_to = 'country') 
+
+renew_bar_chart = ggplot(data = ren, aes(x = year, y =kwh_renewable ))
+renew_bar_chart + geom_bar(stat = 'identity') +
+  scale_x_discrete(name = "Year", limits = c('1990',
+                                             '1995', '2000','2005','2010','2015'))
+
+#### Join emissions and renewable energy dataset to see which segments are using
+### the most renewable energy -----------------
+
+
+e = emissions
+e$quintile <- ntile(e$"2015" , 10)
+e <- e %>%
+  select(country_code, "2015", quintile)
+e = e %>% rename(emissions = "2015")
+View(e)
+renew_for_merge = renew_kwh
+rnm = renew_for_merge %>%
+  select(country_name, country_code, "2015")
+rnm = rnm %>% rename(renewable_energy = "2015" )
+
+renew_and_emission = merge(e, rnm, by = 'country_code')
+
+gg = ggplot(data = na.omit(renew_and_emission), aes(x = as.factor(quintile), y = renewable_energy, fill = as.factor(quintile)))
+gg + geom_bar(stat = 'identity')

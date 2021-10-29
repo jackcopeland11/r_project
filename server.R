@@ -3,6 +3,7 @@ library(ggplot2)
 library(data.table)
 library(tidyr)
 
+renew_kwh <- fread("./total_renewable_kwh.csv" , header = T) # <- Total energy (KwH) that comes from renewable sources
 emissions <- fread("./co2_emissions.csv", header=T)
 population <- fread("./population.csv" , header = T)
 gdp <- fread("./gdp.csv", header=T)
@@ -19,7 +20,7 @@ shinyServer(function(input, output){
       filter(year == input$year)
       
     g = ggplot(data = x , aes(x = emission))
-    g+ geom_histogram(bins =  10, fill = '#B14932')
+    g + geom_histogram(bins = 10, fill = "#B14932")
     })
 
   
@@ -46,7 +47,7 @@ shinyServer(function(input, output){
       pivot_longer(cols = country_name, values_to = 'country') %>%
       filter(country == input$country)
     scatter = ggplot(data = x , aes(x = year, y = emission))
-    scatter + geom_point() + ggtitle("Emission Output Over Time")+ theme(plot.title = element_text(hjust = 0.5))
+    scatter + geom_point(color = "#B14932") + ggtitle("Emission Output Over Time")+ theme(plot.title = element_text(hjust = 0.5))
     
   })
   
@@ -55,25 +56,62 @@ shinyServer(function(input, output){
   output$emission_by_quintile <- renderPlot({
     
     e = emissions
-    e$quintile <- ntile(e$"2018" , 5)
-    quints = e %>%
+    e$quintile <- ntile(e$"2018" , 10)
+    e = select(e, -1:-4)
+    
+    quints = e %>% 
       pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission') %>%
-      arrange("2018")
+      arrange("2018") %>% filter(year == input$year)
+
     
-    quints_grouped = select(quints, -1:-4)
-    
-    
-    emis_line = ggplot(data = quints_grouped, aes(x = year, y = emission, fill = quintile))
+    emis_line = ggplot(data = na.omit(quints), aes(x = year, y = emission, fill = as.factor(quintile)))
     emis_line + geom_bar(stat = 'identity', position = 'dodge') +
       scale_y_discrete(name = 'CO2 Emissions (kt)')+
-      scale_x_discrete(name = "Year", limits = c('1960','1965', '1970',
-                                                 '1975', '1980','1985' ,'1990',
-                                                 '1995', '2000','2005','2010','2018'))
+      scale_x_discrete(name = "Year") + coord_flip()
+    
+  })
+  
+    output$quintile_percent <- renderPlot({
+    e = emissions
+    e$quintile <- ntile(e$"2018" , 10)
+    
+    e = e %>% 
+      pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission')
+    total_emissions = sum(na.omit(emissions$"2018"))
+    
+    
+    v = e %>%
+      group_by(quintile, year) %>% 
+      summarise(percent_of_emission = (sum(emission)/total_emissions)*100)%>%
+      filter(year == input$year)
+
+    g23 = ggplot(data = na.omit(v), aes(x = as.factor(quintile), y= percent_of_emission, fill = as.factor(quintile)))
+    g23 + geom_bar(stat = 'identity')
+    })
+    
+    
+  
+  output$emission_by_country <- renderPlot({
+    
+    e = emissions
+    e$quintile <- ntile(e$"2018" , 10)
+    e = select(e, -1:-4)
+    
+    quints = e %>% 
+      pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission') %>%
+      arrange("2018") %>% filter(qunitile == 10)%>% filter(year == input$year)
+    
+    
+    emis_line = ggplot(data = na.omit(quints), aes(x = country_name, y = emission))
+    emis_line + geom_bar(stat = 'identity', position = 'dodge') +
+      scale_y_discrete(name = 'CO2 Emissions (kt)')+
+      scale_x_discrete(name = "Country") + coord_flip()
     
   })
 
   
   ##Population Basic Graphs ------------------
+  
   output$population_bar_chart <- renderPlot({
     pop = population %>%
       pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'population') 
@@ -97,7 +135,7 @@ shinyServer(function(input, output){
   
   scatter_pop[,5] = sapply(scatter_pop[,5],as.numeric)
   scatter = ggplot(data = scatter_pop , aes(x = year, y = population))
-  scatter + geom_point() + ggtitle("Population Over Time")+ theme(plot.title = element_text(hjust = 0.5))
+  scatter + geom_point(color = '#171B8E') + ggtitle("Population Over Time")+ theme(plot.title = element_text(hjust = 0.5))
   })
   ## GDP Basic Graphs =-----------------------------------------------------
   
@@ -120,9 +158,43 @@ shinyServer(function(input, output){
       pivot_longer(cols = country_name, values_to = 'country') %>%
       filter(country == input$country)
     scatter = ggplot(data = x , aes(x = year, y = gdp))
-    scatter + geom_point() + ggtitle("GDP Over Time")+ theme(plot.title = element_text(hjust = 0.5))
+    scatter + geom_point(color = '#3CA606') + ggtitle("GDP Over Time")+ theme(plot.title = element_text(hjust = 0.5))
     
   })
   
+  
+  ## Renewable Energy Graphs -----------------
+  
+  output$renew_energy_kwh <- renderPlot({
+    ren = renew_kwh %>%
+      pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'kwh_renewable') %>%
+      pivot_longer(cols = country_name, values_to = 'country') 
+    
+    renew_bar_chart = ggplot(data = ren, aes(x = year, y =kwh_renewable ))
+    renew_bar_chart + geom_bar(stat = 'identity', fill = '#3A761C') +
+      scale_x_discrete(name = "Year", limits = c('1990',
+                                                 '1995', '2000','2005','2010','2015'))+
+      ggtitle("Renewable Energy Output")+ theme(plot.title = element_text(hjust = 0.5))
+  })
+  
+  
+  output$focused_renew_energy <- renderPlot({
+    e = emissions
+    e$quintile <- ntile(e$"2015" , 10)
+    e <- e %>%
+      select(country_code, "2015", quintile)
+    e = e %>% rename(emissions = "2015")
+    View(e)
+    renew_for_merge = renew_kwh
+    rnm = renew_for_merge %>%
+      select(country_name, country_code, "2015")
+    rnm = rnm %>% rename(renewable_energy = "2015" )
+    
+    renew_and_emission = merge(e, rnm, by = 'country_code')
+    
+    gg = ggplot(data = na.omit(renew_and_emission), aes(x = as.factor(quintile), y = renewable_energy, fill = as.factor(quintile)))
+    gg + geom_bar(stat = 'identity')
+    
+  })
   
 })

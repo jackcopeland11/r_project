@@ -3,7 +3,7 @@ library(shinydashboard)
 emissions <- fread("./co2_emissions.csv", header=T)
 population <- fread("./population.csv", header=T)
 gdp <- fread("./gdp.csv", header=T)
-
+renew_kwh <- fread("./total_renewable_kwh.csv" , header = T) # <- Total energy (KwH) that comes from renewable sources
 
 
 dashboardPage(
@@ -20,17 +20,18 @@ dashboardPage(
                             column(6,plotOutput("population_bar_chart")),
                             column(6,  plotOutput("gdp_bar_chart"))
           )),
-
+          
           tabPanel("Distribution of Emissions" ,
                 fluidRow(align = "center" , sliderInput("year",
                                 "Year",
                                 min = 1960,
                                 max = 2018,
                                 value = 1960),
-                    checkboxInput("test" , "Test" , FALSE),
                     plotOutput("emission_by_year", width = "90%")),
                 fluidRow(align = 'center', style = "padding-top:100px;",
-                         plotOutput("emission_by_quintile", width = "90%"))
+                         plotOutput("emission_by_quintile", width = "90%")),
+                fluidRow(align = 'center' , style = "padding-top:100px;",
+                         plotOutput("quintile_percent", width = "90%"))
                 ),
                 
                 tabPanel("Scatter by Country",
@@ -47,6 +48,13 @@ dashboardPage(
           
                         )
   ),## Ending all countries tab
-  tabPanel('Top 10 Countries')
-  ) 
+  tabPanel('Renewable Energy',
+           fluidRow(align = "center" , 
+                    titlePanel("Total Renewable Energy"),
+                    plotOutput("renew_energy_kwh", width= "90%"),
+            ),
+           fluidRow(align = 'center', style = 'padding-top:100px;',
+                    plotOutput("focused_renew_energy", width = "90%"))
+           )
+    ) 
   ))
