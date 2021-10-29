@@ -21,14 +21,16 @@ dashboardPage(
                             column(6,  plotOutput("gdp_bar_chart"))
           )),
 
-          tabPanel("Histogram" ,
+          tabPanel("Distribution of Emissions" ,
                 fluidRow(align = "center" , sliderInput("year",
                                 "Year",
                                 min = 1960,
                                 max = 2018,
                                 value = 1960),
                     checkboxInput("test" , "Test" , FALSE),
-                    plotOutput("emission_by_year"))
+                    plotOutput("emission_by_year", width = "90%")),
+                fluidRow(align = 'center', style = "padding-top:100px;",
+                         plotOutput("emission_by_quintile", width = "90%"))
                 ),
                 
                 tabPanel("Scatter by Country",
@@ -36,9 +38,14 @@ dashboardPage(
                            selectizeInput('country',
                                           'Country',
                                           choices = unique(emissions$country_name)),
-                           plotOutput("scatter_plot")
-                         ))
-                )
+                           plotOutput("scatter_plot", width = "90%")
+                         ),
+                         fluidRow(align = 'center', style = "padding-top:100px;",
+                                  plotOutput('pop_scatter', width = "90%")),
+                      fluidRow(align = 'center', style = "padding-top:100px;",
+                               plotOutput('gdp_scat_plot', width = "90%")))
+          
+                        )
   ),## Ending all countries tab
   tabPanel('Top 10 Countries')
   ) 
