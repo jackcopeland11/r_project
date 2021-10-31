@@ -184,7 +184,6 @@ shinyServer(function(input, output){
     e <- e %>%
       select(country_code, "2015", quintile)
     e = e %>% rename(emissions = "2015")
-    View(e)
     renew_for_merge = renew_kwh
     rnm = renew_for_merge %>%
       select(country_name, country_code, "2015")

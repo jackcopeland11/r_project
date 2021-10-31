@@ -10,7 +10,7 @@ dashboardPage(
   dashboardHeader(title = 'Carbon Emissions'),
   dashboardSidebar(),
   dashboardBody(
-    tabsetPanel(tabPanel("Context (All Countries)", ## Beginning of "All Countries" tab
+    tabsetPanel(tabPanel("Problem (CO2 Emissions)", ## Beginning of "All Countries" tab
         tabsetPanel(
           tabPanel("Bar Chart" ,
                    fluidRow(align = "center" , 
@@ -46,15 +46,18 @@ dashboardPage(
                       fluidRow(align = 'center', style = "padding-top:100px;",
                                plotOutput('gdp_scat_plot', width = "90%")))
           
-                        )
-  ),## Ending all countries tab
-  tabPanel('Renewable Energy',
+                        )),
+        ## Ending all countries tab
+  tabPanel("Soltuions (Renewable Energy)",
+        tabsetPanel( 
+          tabPanel('Renewable Energy',
            fluidRow(align = "center" , 
                     titlePanel("Total Renewable Energy"),
                     plotOutput("renew_energy_kwh", width= "90%"),
             ),
            fluidRow(align = 'center', style = 'padding-top:100px;',
                     plotOutput("focused_renew_energy", width = "90%"))
-           )
-    ) 
-  ))
+           ))
+    
+    )
+  )))

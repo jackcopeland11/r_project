@@ -179,3 +179,8 @@ renew_and_emission = merge(e, rnm, by = 'country_code')
 
 gg = ggplot(data = na.omit(renew_and_emission), aes(x = as.factor(quintile), y = renewable_energy, fill = as.factor(quintile)))
 gg + geom_bar(stat = 'identity')
+
+## Create "Successful country" metrics and charts -------------
+
+m = emissions
+
