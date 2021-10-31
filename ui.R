@@ -34,19 +34,9 @@ dashboardPage(
                          plotOutput("emission_by_quintile", width = "90%")),
                 fluidRow(align = 'center' , style = "padding-top:100px;",
                          plotOutput("quintile_percent", width = "90%"))
-                ),
+                )
                 
-                tabPanel("Scatter by Country",
-                         fluidRow(align = "center",
-                           selectizeInput('country',
-                                          'Country',
-                                          choices = unique(emissions$country_name)),
-                           plotOutput("scatter_plot", width = "90%")
-                         ),
-                         fluidRow(align = 'center', style = "padding-top:100px;",
-                                  plotOutput('pop_scatter', width = "90%")),
-                      fluidRow(align = 'center', style = "padding-top:100px;",
-                               plotOutput('gdp_scat_plot', width = "90%")))
+
           
                         )),
         ## Ending all countries tab
@@ -76,8 +66,26 @@ dashboardPage(
                    plotOutput("best_ten", width = "90%")),
           fluidRow(titlePanel("Biggest Increase in Emissions"),
                    align = 'center',style = 'padding-top:100px;',
-                   plotOutput("worst_ten", width = "90%"))
-          )
+                   plotOutput("worst_ten", width = "90%")),
+          
+          ),
+          tabPanel("Example Countries",
+                   fluidRow(align = 'center' ,
+                            selectizeInput('Cluster',
+                                           'Cluster',
+                                           choices = c(1,2,3,4,5)),
+                          column(6,plotOutput("cluster_good")),
+                          column(6,plotOutput("cluster_bad"))),
+                   fluidRow(align = "center",
+                            selectizeInput('country',
+                                           'Country',
+                                           choices = unique(emissions$country_name)),
+                            plotOutput("scatter_plot", width = "90%")
+                   ),
+                   fluidRow(align = 'center', style = "padding-top:100px;",
+                            plotOutput('pop_scatter', width = "90%")),
+                   fluidRow(align = 'center', style = "padding-top:100px;",
+                            plotOutput('gdp_scat_plot', width = "90%")))
           )
     
     )

@@ -223,16 +223,199 @@ change + geom_bar(stat = 'identity', na.rm = T)
 emissions_cluster = emissions %>%
     select(country_name, "2018","1998") %>% 
     mutate(change_in_co2 = emissions$"2018"- emissions$"1998") %>%
-    select(country_name, "2018", change_in_co2 )
+    select(country_name, "2018", change_in_co2 ) %>%
+    rename(recent_co2 = "2018")
 
 # Prepare GDP data for join
 gdp_cluster = gdp %>%
   select(country_name, "2018","1998") %>% 
   mutate(change_in_gdp = gdp$"2018"- gdp$"1998") %>%
-  select(country_name, "2018", change_in_gdp )
+  select(country_name, "2018", change_in_gdp )%>%
+  rename(recent_gdp = "2018")
 
 # Prepare population data for join
+pop_cluster = pop %>%
+  select(country_name, "2018","1998") %>% 
+  mutate(change_in_pop = pop$"2018"- pop$"1998") %>%
+  select(country_name, "2018", change_in_pop)%>%
+  rename(recent_pop = "2018")
+
+### merge all data into one table
+
+first_merge = merge(emissions_cluster, gdp_cluster, by = 'country_name')
+final_cluster = merge(first_merge, pop_cluster, by = 'country_name')
+
+
+final_cluster$recent_pop = as.numeric(final_cluster$recent_pop)
+final_cluster$change_in_pop = as.numeric(final_cluster$change_in_pop)
+
+## Clean for clustering
+for_cluster = final_cluster
+for_cluster = na.omit(for_cluster) ## Remove NAs
+for_cluster <- data.frame(for_cluster, scale(for_cluster[,2:7])) # standardize variables
+for_cluster = for_cluster %>%
+  select(1, 8:13)
+
+
+fit <- kmeans(for_cluster, 5) # 5 cluster solution
+aggregate(for_cluster, by = list(fit$cluster), FUN= mean)
+
+for_cluster <- data.frame(for_cluster, fit$cluster)
+for_cluster = for_cluster %>%
+  select(country_name, fit.cluster)
+
+data_and_cluster = merge(final_cluster, for_cluster, by = 'country_name')
+
+example_countries = data_and_cluster %>%
+  filter(fit.cluster ==5) #%>%
+  filter(change_in_co2 < 0)
+
+graph = ggplot(data = example_countries, aes(x = country_name, y = change_in_co2))
+graph + geom_bar(stat = 'identity')
+
+
+
+
+
+###------------------------------------
+
+
+
+#### Cluster Analysis ----------------------
+#Prepare emissions data for join
+emissions_cluster = emissions %>%
+  select(country_name, "2018","1998") %>% 
+  mutate(change_in_co2 = emissions$"2018"- emissions$"1998") %>%
+  select(country_name, "2018", change_in_co2 ) %>%
+  rename(recent_co2 = "2018")
+
+# Prepare GDP data for join
 gdp_cluster = gdp %>%
   select(country_name, "2018","1998") %>% 
   mutate(change_in_gdp = gdp$"2018"- gdp$"1998") %>%
-  select(country_name, "2018", change_in_gdp )
+  select(country_name, "2018", change_in_gdp )%>%
+  rename(recent_gdp = "2018")
+
+# Prepare population data for join
+pop_cluster = pop %>%
+  select(country_name, "2018","1998") %>% 
+  mutate(change_in_pop = pop$"2018"- pop$"1998") %>%
+  select(country_name, "2018", change_in_pop)%>%
+  rename(recent_pop = "2018")
+
+### merge all data into one table
+
+first_merge = merge(emissions_cluster, gdp_cluster, by = 'country_name')
+final_cluster = merge(first_merge, pop_cluster, by = 'country_name')
+
+
+final_cluster$recent_pop = as.numeric(final_cluster$recent_pop)
+final_cluster$change_in_pop = as.numeric(final_cluster$change_in_pop)
+
+## Clean for clustering
+for_cluster = final_cluster
+for_cluster = na.omit(for_cluster) ## Remove NAs
+for_cluster <- data.frame(for_cluster, scale(for_cluster[,2:7])) # standardize variables
+for_cluster = for_cluster %>%
+  select(1, 8:13)
+
+
+fit <- kmeans(for_cluster, 5) # 5 cluster solution
+aggregate(for_cluster, by = list(fit$cluster), FUN= mean)
+
+for_cluster <- data.frame(for_cluster, fit$cluster)
+for_cluster = for_cluster %>%
+  select(country_name, fit.cluster)
+
+data_and_cluster = merge(final_cluster, for_cluster, by = 'country_name')
+
+example_countries = data_and_cluster %>%
+  filter(fit.cluster == 2) %>%
+  filter(change_in_co2 < 0)
+
+graph = ggplot(data = example_countries, aes(x = country_name, y = change_in_co2))
+graph + geom_bar(stat = 'identity')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+emissions_cluster = emissions %>%
+  select(country_name, "2018","1998") %>% 
+  mutate(change_in_co2 = emissions$"2018"- emissions$"1998") %>%
+  select(country_name, "2018", change_in_co2 ) %>%
+  rename(recent_co2 = "2018")
+
+# Prepare GDP data for join
+gdp_cluster = gdp %>%
+  select(country_name, "2018","1998") %>% 
+  mutate(change_in_gdp = gdp$"2018"- gdp$"1998") %>%
+  select(country_name, "2018", change_in_gdp )%>%
+  rename(recent_gdp = "2018")
+
+# Prepare population data for join
+pop_cluster = pop %>%
+  select(country_name, "2018","1998") %>% 
+  mutate(change_in_pop = pop$"2018"- pop$"1998") %>%
+  select(country_name, "2018", change_in_pop)%>%
+  rename(recent_pop = "2018")
+
+### merge all data into one table
+
+first_merge = merge(emissions_cluster, gdp_cluster, by = 'country_name')
+final_cluster = merge(first_merge, pop_cluster, by = 'country_name')
+
+
+final_cluster$recent_pop = as.numeric(final_cluster$recent_pop)
+final_cluster$change_in_pop = as.numeric(final_cluster$change_in_pop)
+
+## Clean for clustering
+for_cluster = final_cluster
+#for_cluster <- for_cluster[!is.infinite(rowSums(for_cluster)),]\
+for_cluster = na.omit(for_cluster) ## Remove NAs
+for_cluster[,2:7] <- for_cluster[,2:7][is.finite(rowSums(for_cluster[,2:7])),]
+
+
+
+for_cluster <- data.frame(for_cluster, scale(for_cluster[,2:7])) # standardize variables
+for_cluster = for_cluster %>%
+  select(1, 8:13)
+
+
+fit <- kmeans(for_cluster[,2:7], 5) # 5 cluster solution
+for_cluster <- data.frame(for_cluster, fit$cluster)
+
+for_cluster = for_cluster %>%
+  select(country_name, fit.cluster)
+
+data_and_cluster = merge(final_cluster, for_cluster, by = 'country_name')
+
+
+example_countries = data_and_cluster %>%
+  filter(fit.cluster == 2) %>%
+  filter(change_in_co2 < 0)
+
+graph = ggplot(data = example_countries, aes(x = country_name, y = change_in_co2))
+graph + geom_bar(stat = 'identity')
+
+
