@@ -5,6 +5,9 @@ library(tidyr)
 emissions <- fread("./co2_emissions.csv", header=T)
 renewable <- fread("./renewable_energy.csv" , header = T) # <- % of total energy that comes from renewable sources
 renew_kwh <- fread("./total_renewable_kwh.csv" , header = T) # <- Total energy (KwH) that comes from renewable sources
+gdp <- fread('./gdp.csv', header = T)
+pop <- fread('./population.csv', header=T)
+
 
 ####Prepare and plot Emissions data ---------------------------------------------------------
 
@@ -183,4 +186,53 @@ gg + geom_bar(stat = 'identity')
 ## Create "Successful country" metrics and charts -------------
 
 m = emissions
+m$quintile <- ntile(m$"2015" , 10)
 
+largest_changes_good = m %>%
+    mutate(change_in_co2 = m$"2015" - m$"2005") %>% 
+  select(country_name, change_in_co2, quintile) %>% 
+  filter(change_in_co2 < 0 ) %>%
+  arrange(change_in_co2)
+
+largest_change_bad = m %>%
+  mutate(change_in_co2 = m$"2015" - m$"2005") %>% 
+  select(country_name, change_in_co2, quintile) %>% 
+  filter(change_in_co2>0 ) %>%
+  arrange(desc(change_in_co2))
+
+all_changes = m %>%
+  mutate(change_in_co2 = m$"2015" - m$"2005") %>% 
+  select(country_name, change_in_co2, quintile)
+
+all_changes = all_changes %>%
+  group_by(quintile) %>%
+  summarise(change_in_co2 = sum(change_in_co2))
+
+## Change in CO2 emissions by quintile 
+
+
+change = ggplot(data = na.omit(all_changes), aes(x = as.factor(quintile), y = change_in_co2, fill = as.factor(quintile)))
+change + geom_bar(stat = 'identity', na.rm = T)
+
+
+
+#### Attempt at cluster analysis ------------
+
+
+#Prepare emissions data for join
+emissions_cluster = emissions %>%
+    select(country_name, "2018","1998") %>% 
+    mutate(change_in_co2 = emissions$"2018"- emissions$"1998") %>%
+    select(country_name, "2018", change_in_co2 )
+
+# Prepare GDP data for join
+gdp_cluster = gdp %>%
+  select(country_name, "2018","1998") %>% 
+  mutate(change_in_gdp = gdp$"2018"- gdp$"1998") %>%
+  select(country_name, "2018", change_in_gdp )
+
+# Prepare population data for join
+gdp_cluster = gdp %>%
+  select(country_name, "2018","1998") %>% 
+  mutate(change_in_gdp = gdp$"2018"- gdp$"1998") %>%
+  select(country_name, "2018", change_in_gdp )

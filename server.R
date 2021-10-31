@@ -196,4 +196,120 @@ shinyServer(function(input, output){
     
   })
   
+  
+  ##### Change in emissions by quintile data ----------------
+  
+  output$all_changes_by_quintile <- renderPlot({
+    
+    m = emissions
+    m$quintile <- ntile(m$"2015" , 10)
+    first_table = m %>%
+      pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission') %>%
+      pivot_longer(cols = country_name, values_to = 'country') %>%
+      filter(year == input$start_year)
+    second_table = emissions %>%
+      pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission') %>%
+      pivot_longer(cols = country_name, values_to = 'country') %>%
+      filter(year == input$end_year)
+    
+    total = merge(first_table, second_table, by = "country")
+    
+    all_changes = total %>% 
+      select(country, quintile, emission.x, emission.y)
+    
+    
+    all_changes = all_changes %>%
+      mutate(change_in_co2 = emission.y - emission.x) %>% 
+      select(country, change_in_co2, quintile)
+    
+    all_changes = all_changes %>%
+      group_by(quintile) %>%
+      summarise(change_in_co2 = sum(change_in_co2))
+    
+    ## Change in CO2 emissions by quintile 
+    
+    change = ggplot(data = na.omit(all_changes), aes(x = as.factor(quintile), y = change_in_co2, fill = as.factor(quintile)))
+    change + geom_bar(stat = 'identity', na.rm = T)
+    
+    
+  })
+  
+  output$best_ten <- renderPlot({
+    
+    m = emissions
+    m$quintile <- ntile(m$"2015" , 10)
+    first_table = m %>%
+      pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission') %>%
+      pivot_longer(cols = country_name, values_to = 'country') %>%
+      filter(year == input$start_year)
+    second_table = emissions %>%
+      pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission') %>%
+      pivot_longer(cols = country_name, values_to = 'country') %>%
+      filter(year == input$end_year)
+    
+    total = merge(first_table, second_table, by = "country")
+    
+    all_changes = total %>% 
+      select(country, quintile, emission.x, emission.y)
+    
+    
+    all_changes = all_changes %>%
+      mutate(change_in_co2 = emission.y - emission.x) %>% 
+      select(country, change_in_co2, quintile) %>% arrange(change_in_co2) %>%
+      slice(1:10)
+    
+    final = all_changes %>%
+      group_by(quintile, country) %>%
+      summarise(change_in_co2 = sum(change_in_co2)) %>%
+      filter(change_in_co2 < 0 ) 
+    
+    ## Change in CO2 emissions by quintile 
+    
+    
+    change = ggplot(data = na.omit(all_changes), aes(x = country, y = change_in_co2, fill = as.factor(quintile)))
+    change + geom_bar(stat = 'identity', na.rm = T)
+    
+    
+  })
+  
+  output$worst_ten <- renderPlot({
+    
+    m = emissions
+    m$quintile <- ntile(m$"2015" , 10)
+    first_table = m %>%
+      pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission') %>%
+      pivot_longer(cols = country_name, values_to = 'country') %>%
+      filter(year == input$start_year)
+    second_table = emissions %>%
+      pivot_longer(cols = (starts_with('19') | starts_with('20')), names_to = 'year' , values_to = 'emission') %>%
+      pivot_longer(cols = country_name, values_to = 'country') %>%
+      filter(year == input$end_year)
+    
+    total = merge(first_table, second_table, by = "country")
+    
+    all_changes = total %>% 
+      select(country, quintile, emission.x, emission.y)
+    
+    
+    all_changes = all_changes %>%
+      mutate(change_in_co2 = emission.y - emission.x) %>% 
+      select(country, change_in_co2, quintile) %>% arrange(desc(change_in_co2)) %>%
+      slice(1:10)
+    
+    final = all_changes %>%
+      group_by(quintile, country) %>%
+      summarise(change_in_co2 = sum(change_in_co2)) %>%
+      filter(change_in_co2 > 0 ) 
+    
+    ## Change in CO2 emissions by quintile 
+    
+    
+    change = ggplot(data = na.omit(all_changes), aes(x = country, y = change_in_co2, fill = as.factor(quintile)))
+    change + geom_bar(stat = 'identity', na.rm = T)
+    
+    
+  })
+  
+  
+  
 })
